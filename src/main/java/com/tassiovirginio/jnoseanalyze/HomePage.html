@@ -42,24 +42,34 @@
 
     <section class="jumbotron">
         <div class="container">
-            <div wicket:id="containerFeedback" class="alert alert-danger" role="alert">
+            <div wicket:id="containerFeedback"  >
                 <span wicket:id="feedback">This is a danger alert—check it out!</span>
             </div>
             <form wicket:id="fom">
                 <div class="form-group row">
-                    <label for="classtest" class="col-sm-2 col-form-label col-form-label-sm">Class Test</label>
+                    <label for="classtest" class="col-sm-2 col-form-label col-form-label-sm">Test Class</label>
                     <div class="col-sm-10">
-                        <input id="classtest" class="form-control form-control-sm" wicket:id="fileUpload1" type="file"
+                        <input id="classtest" class="form-control-file form-control-sm" wicket:id="fileUpload1" type="file"
                                required/>
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label for="classproduction" class="col-sm-2 col-form-label col-form-label-sm">Class Production (optional)</label>
+                    <label for="classproduction" class="col-sm-2 col-form-label col-form-label-sm">Production Class (optional)*</label>
                     <div class="col-sm-10">
-                        <input id="classproduction" class="form-control form-control-sm" wicket:id="fileUpload2" type="file"/>
+                        <input id="classproduction" class="form-control-file form-control-sm " wicket:id="fileUpload2" type="file"/>
                     </div>
                 </div>
-                <input class="btn btn-primary" wicket:id="btSubmit" type="submit" value="Analyze"/>
+                <div class="form-group row">
+                    <label for="classtest" class="col-sm-2 col-form-label col-form-label-sm">
+                        <input class="btn btn-primary" wicket:id="btSubmit" type="submit" value="Analyze"/>
+                    </label>
+                    <div class="col-sm-10">
+                        <font size="2px">
+                            <span class="badge badge-warning">Warning</span> EagerTest and LazyTest need the production class.
+                        </font>
+                    </div>
+                </div>
+
             </form>
         </div>
         <br>

@@ -4,6 +4,7 @@ import br.ufba.jnose.core.Config;
 import br.ufba.jnose.core.JNoseCore;
 import br.ufba.jnose.dto.TestClass;
 import br.ufba.jnose.dto.TestSmell;
+import de.agilecoders.wicket.core.markup.html.bootstrap.common.NotificationPanel;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -13,7 +14,6 @@ import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebRequest;
@@ -46,12 +46,11 @@ public class HomePage extends WebPage {
 
         WebMarkupContainer containerFeedback = new WebMarkupContainer("containerFeedback");
         containerFeedback.setOutputMarkupId(true);
-//        containerFeedback.add(new AjaxSelfUpdatingTimerBehavior(Duration.ofSeconds(10)));
         add(containerFeedback);
 
-        FeedbackPanel feedbackPanel1 = new FeedbackPanel("feedback");
-        feedbackPanel1.setOutputMarkupId(true);
-        containerFeedback.add(feedbackPanel1);
+        NotificationPanel notificationPanel = new NotificationPanel("feedback");
+        notificationPanel.setOutputMarkupId(true);
+        containerFeedback.add(notificationPanel);
 
         Form form = new Form<Void>("fom");
         form.setMultiPart(true);
@@ -99,19 +98,20 @@ public class HomePage extends WebPage {
                 TestClass testClass = new TestClass();
                 testClass.setName(uploadedFile1.getClientFileName());
                 testClass.setPathFile(classTestFile.getAbsolutePath());
+
                 if(classProductionFile != null) {
                     testClass.setProductionFile(classProductionFile.getAbsolutePath());
                 }else{
                     testClass.setProductionFile("");
                 }
+
                 testClass.setProjectName("");
 
                 //Mudar a lógica depois no Core
                 testClass.setJunitVersion(TestClass.JunitVersion.JUnit4);
 
-
-                JNoseCore jNoseCore = new JNoseCore(loadConfig());
-                Boolean isClassTest = jNoseCore.isTestFile(testClass);
+                JNoseCore jNoseCore = new JNoseCore(loadConfig(!testClass.getProductionFile().isBlank()));
+//                Boolean isClassTest = jNoseCore.isTestFile(testClass);
                 jNoseCore.getTestSmells(testClass);
 
                 List<TestSmell> listaTestSmellBean = testClass.getListTestSmell();
@@ -119,20 +119,19 @@ public class HomePage extends WebPage {
 
                 target.add(container, form, containerFeedback);
 
-                info("ClassTest: " + uploadedFile1.getClientFileName());
+                info("ClassTest: " + uploadedFile1.getClientFileName() + " - Processed - " + listaTestSmellBean.size() + " TestSmells found.");
 
-                if(classProductionFile != null)
-                info("ClassProduction: " + uploadedFile2.getClientFileName());
+                if(classProductionFile != null) {
+                    info("ClassProduction: " + uploadedFile2.getClientFileName());
+                    classProductionFile.delete();
+                }
+
+                classTestFile.delete();
             }
         };
         form.add(btSubmit);
 
         add(form);
-
-//        WebMarkupContainer containerInfo = new WebMarkupContainer("containerInfo");
-//        containerInfo.setOutputMarkupId(true);
-//        containerInfo.add(new AjaxSelfUpdatingTimerBehavior(Duration.ofSeconds(1)));
-//        add(containerInfo);
 
         listview = new ListView<TestSmell>("listview", listaTestSmellBeans) {
             protected void populateItem(ListItem<TestSmell> item) {
@@ -152,7 +151,7 @@ public class HomePage extends WebPage {
 
     }
 
-    private Config loadConfig(){
+    private Config loadConfig(boolean withClassProduction){
         Config config = new Config() {
             @Override
             public Boolean assertionRoulette() {
@@ -186,7 +185,7 @@ public class HomePage extends WebPage {
 
             @Override
             public Boolean eagerTest() {
-                return true;
+                return withClassProduction;
             }
 
             @Override
@@ -236,7 +235,7 @@ public class HomePage extends WebPage {
 
             @Override
             public Boolean lazyTest() {
-                return true;
+                return withClassProduction;
             }
 
             @Override
