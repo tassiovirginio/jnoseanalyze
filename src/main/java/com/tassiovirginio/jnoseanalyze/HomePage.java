@@ -54,6 +54,7 @@ public class HomePage extends WebPage {
     public HomePage(List<TestSmell> listaTestSmellBeans) {
 
         fileInList = new ArrayList<>();
+        fileInList.add("//zero");//add line zero
 
         loadDescriptions();
 
@@ -312,7 +313,11 @@ public class HomePage extends WebPage {
         descriptions.put("IgnoredTest","Starting with JUnit 4, developers are provided with the ability to prevent the execution of test methods. However, these ignored test methods result in overhead in terms of compilation time and an increase in code complexity and understanding time.");
         descriptions.put("Resource Optimism","Test code that makes optimistic assumptions about the existence or absence of a particular external resource, and the state of that external resource (such as private directories or database tables) can cause non-deterministic behavior in the test results. The situation in which the tests run well at one time and fail at another is not a situation that the test should take place.");
         descriptions.put("Magic Number Test","Many 'Magic Numbers' or Strings used when creating objects that are likely to result in an unrepeatable test.");
-        descriptions.put("","");
+        descriptions.put("EmptyTest","Test methods that do not contain executable instructions.");
+        descriptions.put("Exception Catching Throwing","This test smell occurs when the approval or disapproval of a test method explicitly depends on the production method that generates an exception.");
+        descriptions.put("General Fixture","In the JUnit framework, a programmer can write a 'setUp()' method that will be executed before each test method to create an environment for the tests to be run. The test smell becomes evident when the 'setUp()' environment is very general and the tests only need part of this configuration. The 'setUp()' methods start to get big and their understanding is reduced, and with the addition of functions, it starts to get slow. The danger of having a test that takes too long to complete, interfering with the development process, encourages programmers not to run the tests.");
+        descriptions.put("Mystery Guest","When a test uses external resources, such as a file necessary for its execution, this external resource does not make the test autonomous. Consequently, there is not enough information to understand the tested functionality, making it difficult to use this test as documentation. In addition, these external resources can be shared. And its use introduces hidden dependencies: if any force changes or excludes this feature, the tests begin to fail.");
+        descriptions.put("Print Statement","The printing instructions in the unit tests are redundant, as the unit tests are performed as part of an automated script. It consumes resources or increases the execution time.");
         descriptions.put("","");
         descriptions.put("","");
 
@@ -323,13 +328,13 @@ public class HomePage extends WebPage {
         StringBuffer lines = new StringBuffer();
 
         if(range.contains("-")) {
-            String[] r = range.split("-");
+            String[] r = range.trim().split("-");
             Integer start = Integer.parseInt(r[0]);
             Integer end = Integer.parseInt(r[1]);
             if(start == end){
                 lines.append(fileInList.get(start));
             }else {
-                fileInList.subList(start, end).stream().forEach(line -> lines.append(line + "<br>"));
+                fileInList.subList(start, end+1).stream().forEach(line -> lines.append(line + "<br>"));
             }
         }else if(range.contains(",")) {
             String[] r = range.split(",");
@@ -339,7 +344,7 @@ public class HomePage extends WebPage {
             }
         }else{
             Integer line = Integer.parseInt(range);
-            lines.append(fileInList.get(line));
+            lines.append(fileInList.get(line)+"<br>");
         }
 
         return lines.toString();
