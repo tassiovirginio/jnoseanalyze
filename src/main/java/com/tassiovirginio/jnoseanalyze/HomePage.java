@@ -332,22 +332,46 @@ public class HomePage extends WebPage {
             Integer start = Integer.parseInt(r[0]);
             Integer end = Integer.parseInt(r[1]);
             if(start == end){
-                lines.append(fileInList.get(start));
+                lines.append(getLine(start-2));
+                lines.append(getLine(start-1));
+                lines.append("<b>"+fileInList.get(start)+"</b><br>");
+                lines.append(getLine(start+1));
+                lines.append(getLine(start+2));
             }else {
-                fileInList.subList(start, end+1).stream().forEach(line -> lines.append(line + "<br>"));
+                lines.append(getLine(start-2));
+                lines.append(getLine(start-1));
+                fileInList.subList(start, end+1).stream().forEach(line -> lines.append("<b>"+ line + "</b><br>"));
+                lines.append(getLine(end+2));
+                lines.append(getLine(end+3));
             }
         }else if(range.contains(",")) {
             String[] r = range.split(",");
             for(String l : r){
                 Integer line = Integer.parseInt(l.trim());
-                lines.append(fileInList.get(line)+"<br>");
+                lines.append(getLine(line-2));
+                lines.append(getLine(line-1));
+                lines.append("<b>"+fileInList.get(line)+"</b><br>");
+                lines.append(getLine(line+1));
+                lines.append(getLine(line+2));
             }
         }else{
             Integer line = Integer.parseInt(range);
-            lines.append(fileInList.get(line)+"<br>");
+            lines.append(getLine(line-2));
+            lines.append(getLine(line-1));
+            lines.append("<b>"+fileInList.get(line)+"</b><br>");
+            lines.append(getLine(line+1));
+            lines.append(getLine(line+2));
         }
 
         return lines.toString();
+    }
+
+    private String getLine(int line){
+        if(line > 0 && line < fileInList.size()) {
+            return fileInList.get(line) + "<br>";
+        }else{
+            return "";
+        }
     }
 
 }
