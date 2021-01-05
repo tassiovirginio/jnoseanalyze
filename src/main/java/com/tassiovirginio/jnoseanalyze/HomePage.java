@@ -9,16 +9,20 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.badge.BootstrapBadge;
 import de.agilecoders.wicket.core.markup.html.bootstrap.common.NotificationPanel;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebRequest;
@@ -165,18 +169,20 @@ public class HomePage extends WebPage {
                 item.add(new Label("method", testSmell.getMethod()));
                 item.add(new Label("range", testSmell.getRange()));
 
-                BootstrapBadge bootstrapBadge2 = new BootstrapBadge("view", "view", BadgeBehavior.Type.Success);
-                item.add(bootstrapBadge2);
-
                 String contentDescription = descriptions.get(testSmell.getName());
                 String content = contentDescription + "<br><br><b>You code:</b><br><pre><br>" + getLines(testSmell.getRange()) + "<br></pre> <br>";
 
-                PopoverConfig config = new PopoverConfig();
-                config.withHtml(true);
+                ModalView modal = new ModalView("modal",testSmell.getName(),content);
+                item.add(modal);
 
-                PopoverBehavior popoverBehavior2 = new PopoverBehavior(Model.of(testSmell.getName()), Model.of(content), config);
-                bootstrapBadge2.add(popoverBehavior2);
-
+                AjaxLink linkModal = new AjaxLink<>("lkModal") {
+                    @Override
+                    public void onClick(AjaxRequestTarget ajaxRequestTarget) {
+                        modal.show(true);
+                        ajaxRequestTarget.add(modal);
+                    }
+                };
+                item.add(linkModal);
             }
         };
 
@@ -389,4 +395,6 @@ public class HomePage extends WebPage {
     }
 
 }
+
+
 
