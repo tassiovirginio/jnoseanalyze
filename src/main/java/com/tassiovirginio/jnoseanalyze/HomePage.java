@@ -4,7 +4,11 @@ import br.ufba.jnose.core.Config;
 import br.ufba.jnose.core.JNoseCore;
 import br.ufba.jnose.dto.TestClass;
 import br.ufba.jnose.dto.TestSmell;
+import de.agilecoders.wicket.core.markup.html.bootstrap.badge.BadgeBehavior;
+import de.agilecoders.wicket.core.markup.html.bootstrap.badge.BootstrapBadge;
 import de.agilecoders.wicket.core.markup.html.bootstrap.common.NotificationPanel;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -15,14 +19,21 @@ import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebRequest;
 import org.apache.wicket.util.lang.Bytes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 
 public class HomePage extends WebPage {
@@ -34,11 +45,17 @@ public class HomePage extends WebPage {
 
     private AjaxButton btSubmit;
 
+    private List<String> fileInList;
+
     public HomePage() {
         this(new ArrayList<>());
     }
 
     public HomePage(List<TestSmell> listaTestSmellBeans) {
+
+        fileInList = new ArrayList<>();
+
+        loadDescriptions();
 
         WebRequest req = (WebRequest) RequestCycle.get().getRequest();
         HttpServletRequest httpReq = (HttpServletRequest) req.getContainerRequest();
@@ -84,6 +101,12 @@ public class HomePage extends WebPage {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                }
+
+                try (Stream<String> stream = Files.lines(classTestFile.getAbsoluteFile().toPath())) {
+                    stream.forEach(line -> fileInList.add(line));
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
 
                 if(uploadedFile2 != null){
@@ -140,6 +163,18 @@ public class HomePage extends WebPage {
                 item.add(new Label("nome",testSmell.getName()));
                 item.add(new Label("method",testSmell.getMethod()));
                 item.add(new Label("range",testSmell.getRange()));
+
+                BootstrapBadge bootstrapBadge2 = new BootstrapBadge("view","view", BadgeBehavior.Type.Success);
+                item.add(bootstrapBadge2);
+
+                String contentDescription = descriptions.get(testSmell.getName());
+                String content = contentDescription + "<br><br><b>You code:</b><br><pre><br>" + getLines(testSmell.getRange()) +"<br></pre> <br>";
+
+                PopoverConfig config = new PopoverConfig();
+                config.withHtml(true);
+
+                PopoverBehavior popoverBehavior2 = new PopoverBehavior(Model.of(testSmell.getName()),Model.of(content),config);
+                bootstrapBadge2.add(popoverBehavior2);
 
             }
         };
@@ -260,6 +295,54 @@ public class HomePage extends WebPage {
         };
 
         return config;
+    }
+
+    private Map<String,String> descriptions = new HashMap<>();
+
+    private void loadDescriptions(){
+
+        descriptions.put("Unknown Test","A test method without a assertion condition, the test will always be valid, not resulting in an exception. This programming practice makes it difficult to understand the test.");
+        descriptions.put("Sleepy Test","Developers introduce this test smell when they need to pause the execution of instructions in a test method for a certain period and continue the execution.");
+        descriptions.put("Assertion Roulette","This test smell occurs when the test method has a series of assertions without a description. If an assertion fails, it is not known which one generated the failure and its reason.");
+        descriptions.put("Conditional Test Logic","Tests containing conditional logic (IF instructions or loops).");
+        descriptions.put("Redundant Assertion","This smell occurs when the test methods contain assertion statements that are always true or false. A test is intended to return a binary result, regardless of whether the desired result is correct or not, and must not return the same output, regardless of the input.");
+        descriptions.put("Sensitive Equality","It is quick and easy to write equality checks using 'string'. A typical way is to calculate a real result, map it to a string, which is then compared to a literal string that represents the expected value. Such tests, however, can depend on many irrelevant details, such as commas, quotes, spaces, etc. Whenever a 'string' is changed, the tests start to fail. The solution is to replace the equality checks using 'string' with real equality checks.");
+        descriptions.put("Duplicate Assert","This smell occurs when a test method tests the same condition several times on the same test method.");
+        descriptions.put("Constructor Initialization","Test methods that feature a constructor. Ideally, the test suite should not have a constructor. The initialization of the fields must be in the setUp() method. Developers who are unaware of the purpose of the setUp() method would allow this test smell by creating a constructor for the test suite.");
+        descriptions.put("IgnoredTest","Starting with JUnit 4, developers are provided with the ability to prevent the execution of test methods. However, these ignored test methods result in overhead in terms of compilation time and an increase in code complexity and understanding time.");
+        descriptions.put("Resource Optimism","Test code that makes optimistic assumptions about the existence or absence of a particular external resource, and the state of that external resource (such as private directories or database tables) can cause non-deterministic behavior in the test results. The situation in which the tests run well at one time and fail at another is not a situation that the test should take place.");
+        descriptions.put("Magic Number Test","Many 'Magic Numbers' or Strings used when creating objects that are likely to result in an unrepeatable test.");
+        descriptions.put("","");
+        descriptions.put("","");
+        descriptions.put("","");
+
+    }
+
+    private String getLines(String range){
+
+        StringBuffer lines = new StringBuffer();
+
+        if(range.contains("-")) {
+            String[] r = range.split("-");
+            Integer start = Integer.parseInt(r[0]);
+            Integer end = Integer.parseInt(r[1]);
+            if(start == end){
+                lines.append(fileInList.get(start));
+            }else {
+                fileInList.subList(start, end).stream().forEach(line -> lines.append(line + "<br>"));
+            }
+        }else if(range.contains(",")) {
+            String[] r = range.split(",");
+            for(String l : r){
+                Integer line = Integer.parseInt(l.trim());
+                lines.append(fileInList.get(line)+"<br>");
+            }
+        }else{
+            Integer line = Integer.parseInt(range);
+            lines.append(fileInList.get(line));
+        }
+
+        return lines.toString();
     }
 
 }
