@@ -299,6 +299,11 @@ public class HomePage extends WebPage {
             public Boolean magicNumberTest() {
                 return true;
             }
+
+            @Override
+            public Integer maxStatements() {
+                return 30;
+            }
         };
 
         return config;
